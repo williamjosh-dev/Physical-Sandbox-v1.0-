@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+﻿import { useEffect, useRef } from 'react';
+import * as THREE from'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 interface SceneProps {
   trajectory: number[][];
@@ -12,6 +13,7 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
   const containerRef = useRef<HTMLDivElement | null>(null);
   const spacecraftRef = useRef<THREE.Mesh | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const trajectoryLineRef = useRef<THREE.Line | null>(null);
   const frameRef = useRef(currentFrame);
   const trajectoryRef = useRef(trajectory);
   const playingRef = useRef(isPlaying);
@@ -46,6 +48,10 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
     cameraRef.current = camera;
     scene.add(camera);
 
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
     const ambientLight = new THREE.AmbientLight(0x00ffcc, 0.8);
     scene.add(ambientLight);
 
@@ -70,10 +76,19 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
     spacecraftRef.current = spacecraftMesh;
     scene.add(spacecraftMesh);
 
-    let frameId = 0;
+    const lineMaterial = new THREE.LineBasicMaterial({ 
+      color: 0x00ffcc, 
+      transparent: true, 
+      opacity: 0.4 
+    });
+    const lineGeometry = new THREE.BufferGeometry();
+    const trajectoryLine = new THREE.Line(lineGeometry, lineMaterial);
+    trajectoryLineRef.current = trajectoryLine;
+    scene.add(trajectoryLine);
 
+    let frameId = 0;
     const animate = () => {
-      earthMesh.rotation.y += 0.00035;
+      earthMesh.rotation.y += 0.0001;
 
       const frames = trajectoryRef.current;
       const frameIndex = frames.length ? Math.min(frameRef.current, frames.length - 1) : 0;
@@ -87,6 +102,7 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
         }
       }
 
+      controls.update();
       renderer.render(scene, camera);
       frameId = requestAnimationFrame(animate);
     };
@@ -123,15 +139,20 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
   }, [onFrameAdvance]);
 
   useEffect(() => {
-    if (!spacecraftRef.current || !trajectory.length) {
-      return;
-    }
+    if (!spacecraftRef.current || !trajectory.length) return;
 
+    // Update Spacecraft Position
     const stepData = trajectory[Math.min(currentFrame, trajectory.length - 1)] ?? [];
     if (Array.isArray(stepData) && stepData.length >= 2) {
       const x = Number(stepData[0]) || 0;
       const y = Number(stepData[1]) || 0;
       spacecraftRef.current.position.set(x, y, 0);
+    }
+
+    // Update Trajectory Line Path
+    if (trajectoryLineRef.current) {
+      const points = trajectory.map(step => new THREE.Vector3(Number(step[0]) || 0, Number(step[1]) || 0, 0));
+      trajectoryLineRef.current.geometry.setFromPoints(points);
     }
   }, [currentFrame, trajectory]);
 
