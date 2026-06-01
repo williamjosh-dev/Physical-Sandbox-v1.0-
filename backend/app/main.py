@@ -1,6 +1,8 @@
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+# to start uvicorn - uvicorn backend.app.main:app --reload
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator, Dict, List
@@ -53,7 +55,7 @@ def health_check() -> Dict[str, str]:
     }
 
 
-@app.post("/config", response_model=ConfigResponse)
+@app.post("/api/config", response_model=ConfigResponse)
 def build_simulation_config(request: ConfigRequest) -> ConfigResponse:
     try:
         config = map_prompt_to_scipy_tracking(request.prompt)
@@ -75,7 +77,7 @@ def build_simulation_config(request: ConfigRequest) -> ConfigResponse:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred during configuration: {e}")
 
 
-@app.post("/simulate", response_model=SimulationResponse)
+@app.post("/api/simulate", response_model=SimulationResponse)
 def simulate_prompt(request: PromptRequest) -> SimulationResponse:
     if not request.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty.")
@@ -101,8 +103,8 @@ def simulate_prompt(request: PromptRequest) -> SimulationResponse:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred during simulation: {e}")
 
 
-@app.get("/api")
-async def api_root() -> Dict[str, object]:
+@app.get("/api/root_route")
+async def api_root_route() -> Dict[str, object]:
     return {
         "status": "online",
         "project": "4D AI Physics Sandbox Core",

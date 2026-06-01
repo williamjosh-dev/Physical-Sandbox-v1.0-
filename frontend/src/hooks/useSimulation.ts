@@ -1,12 +1,19 @@
 import { useCallback } from 'react';
 
-const BACKEND_URL = '/simulate';
+const BACKEND_URL = '/api/simulate';
+
+export interface TheoryPayload {
+  title: string;
+  core_concept: string;
+  governing_equations: string[];
+}
 
 export interface SimulationResponse {
   success: boolean;
   message: string;
   t: number[];
   y: number[][];
+  theory?: TheoryPayload; // Matches 'result.theory' in App.tsx
   error?: string;
 }
 
@@ -55,6 +62,11 @@ async function fetchSimulationPayload(prompt: string): Promise<SimulationRespons
       y: Array.isArray(data.y)
         ? data.y.map((row) => (Array.isArray(row) ? row.map(Number).filter((value) => !Number.isNaN(value)) : []))
         : [],
+      theory: data.theory ? {
+        title: String(data.theory.title || ''),
+        core_concept: String(data.theory.core_concept || ''),
+        governing_equations: Array.isArray(data.theory.governing_equations) ? data.theory.governing_equations.map(String) : []
+      } : undefined,
       error: data.error,
     };
   } catch (error) {
