@@ -115,7 +115,18 @@ async def api_root_route() -> Dict[str, object]:
 
 # Mount frontend static files last so they don't override API routes
 if FRONTEND_DIST.exists():
+    # 🌟 ADD THESE TWO MOUNTS ABOVE THE ROOT MOUNT:
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+        
+    texture_dir = FRONTEND_DIST / "texture"
+    if texture_dir.exists():
+        app.mount("/texture", StaticFiles(directory=str(texture_dir)), name="texture")
+
+    # This remains unchanged at the absolute bottom
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
+
 
 
 def start():
