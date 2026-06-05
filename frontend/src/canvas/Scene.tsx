@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import Spacecraft from './spacecraft';
 
 interface SceneProps {
   trajectory: number[][];
@@ -15,6 +16,9 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
   const trajectoryRef = useRef(trajectory);
   const playingRef = useRef(isPlaying);
   const frameRef = useRef(currentFrame);
+
+  // 🌟 FIX: Lifted state to the top-level of the component so the entire file can see it
+  const [threeScene, setThreeScene] = useState<THREE.Scene | null>(null);
 
   useEffect(() => {
     frameRef.current = currentFrame;
@@ -44,7 +48,8 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    
+    setThreeScene(scene); // 🌟 Sets our top-level state perfectly
+
     // 2. Optimized Near plane to 1000 to drastically improve depth buffer precision
     const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1000, 4e10);
     camera.position.set(1e7, 5e6, 1e7); 
@@ -85,7 +90,7 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
       transparent: true,
       opacity: 0.8,
       depthWrite: false, 
-      blending: THREE.NormalBlending // Explicitly enforces clean layer rendering
+      blending: THREE.NormalBlending 
     });
     const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
     scene.add(cloudMesh);
@@ -127,5 +132,10 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
     };
   }, [onFrameAdvance]);
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }} />;
+  return (
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
+      {/* 🌟 Now threeScene is perfectly readable down here! */}
+      <Spacecraft scene={threeScene} trajectory={trajectory} currentFrame={currentFrame} />
+    </div>
+  );
 }

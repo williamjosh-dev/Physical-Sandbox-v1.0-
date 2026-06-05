@@ -1,36 +1,35 @@
+# backend/app/main.py
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# to start uvicorn - uvicorn backend.app.main:app --reload
+# To start uvicorn - uvicorn backend.app.main:app --reload
 
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator, Dict, List
+import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
-from app.agents.evaluator import evaluate_prompt
-from app.agents.orchestrator import map_prompt_to_scipy_tracking
+# Import our new multi-pass self-correction entry point loop
+from app.agents.orchestrator import run_automated_sandbox_loop, map_prompt_to_scipy_tracking
 from app.physics.aerospace import MODEL_TYPES
 from app.schemas.request import ConfigRequest, PromptRequest
 from app.schemas.simulation import ConfigResponse, SimulationResponse
-
 
 settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # Startup logic
     app.state.settings = settings
     yield
-    # Shutdown logic (if any) can go here
 
 app = FastAPI(
     title=settings.app_name,
-    description="FastAPI gateway for aerospace prompt mapping and SciPy simulation execution.",
-    version="0.1.0",
+    description="4D Neuro-Symbolic Sandbox Gateway. Uses an LLM code loop validated by a deterministic SciPy execution layer.",
+    version="1.0.0",
     lifespan=lifespan,
 )
 
@@ -45,7 +44,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/health")
 def health_check() -> Dict[str, str]:
     return {
@@ -53,7 +51,6 @@ def health_check() -> Dict[str, str]:
         "service": "physical-sandbox-backend",
         "environment": settings.environment,
     }
-
 
 @app.post("/api/config", response_model=ConfigResponse)
 def build_simulation_config(request: ConfigRequest) -> ConfigResponse:
@@ -70,12 +67,9 @@ def build_simulation_config(request: ConfigRequest) -> ConfigResponse:
             control_inputs={name: values.tolist() for name, values in config.control_inputs.items()},
         )
     except ValueError as e:
-        # Catch specific errors from map_prompt_to_scipy_tracking if it raises them
         raise HTTPException(status_code=422, detail=f"Invalid prompt for configuration: {e}")
     except Exception as e:
-        # Catch any other unexpected errors during configuration building
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred during configuration: {e}")
-
 
 @app.post("/api/simulate", response_model=SimulationResponse)
 def simulate_prompt(request: PromptRequest) -> SimulationResponse:
@@ -83,25 +77,46 @@ def simulate_prompt(request: PromptRequest) -> SimulationResponse:
         raise HTTPException(status_code=400, detail="Prompt cannot be empty.")
     
     try:
-        result = evaluate_prompt(request.prompt, rtol=request.rtol, atol=request.atol)
+        # 1. Trigger our multi-turn autonomous self-correction loop engine
+        # Pass request.max_retries if available in your schema, else default to 3
+        max_retries = getattr(request, 'max_retries', 3)
+        result = run_automated_sandbox_loop(request.prompt, max_retries=max_retries)
+        
+        # 2. Check if the simulation timed out completely without matching physics parameters
+        if not result["success"] and result["telemetry"] is None:
+            return SimulationResponse(
+                success=False,
+                physics_passed=False,
+                message=result["logs"],
+                model_type=result["model_type"],
+                labels=[],
+                t=[],
+                y=[],
+                parameters={},
+                prompt=request.prompt
+            )
+            
+        telemetry = result["telemetry"]
+        state_matrices = np.array(telemetry["state_matrices"])
+        
+        # 3. Transpose matrix states to (num_time_steps, num_states) for your 3D earth path mesh
+        formatted_y = state_matrices.T.tolist() if state_matrices.ndim == 2 else state_matrices.tolist()
+
         return SimulationResponse(
-            success=result.success,
-            physics_passed=result.physics_passed,
-            message=result.message,
-            model_type=result.model_type,
-            labels=result.config.state_labels,
-            t=result.t.tolist(),
-            y=result.y.T.tolist() if result.y.ndim == 2 else result.y.tolist(),
-            parameters=result.config.parameters,
-            prompt=result.config.prompt,
+            success=result["success"],
+            physics_passed=True,
+            message=result["logs"],
+            model_type=result["model_type"],
+            labels=telemetry["labels"],
+            t=telemetry["timeline"],
+            y=formatted_y,
+            parameters={}, # Can add parameter mapping tracker updates if desired
+            prompt=request.prompt,
         )
     except ValueError as e:
-        # Catch specific errors from evaluate_prompt if it raises them (e.g., invalid parameters)
-        raise HTTPException(status_code=422, detail=f"Simulation input error: {e}")
+        raise HTTPException(status_code=422, detail=f"Simulation input validation failure: {e}")
     except Exception as e:
-        # Catch any other unexpected errors during simulation execution
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred during simulation: {e}")
-
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred inside the sandbox pipeline: {e}")
 
 @app.get("/api/root_route")
 async def api_root_route() -> Dict[str, object]:
@@ -112,10 +127,8 @@ async def api_root_route() -> Dict[str, object]:
         "supported_models": MODEL_TYPES,
     }
 
-
-# Mount frontend static files last so they don't override API routes
+# Mount frontend static files safely
 if FRONTEND_DIST.exists():
-    # 🌟 ADD THESE TWO MOUNTS ABOVE THE ROOT MOUNT:
     assets_dir = FRONTEND_DIST / "assets"
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
@@ -124,12 +137,8 @@ if FRONTEND_DIST.exists():
     if texture_dir.exists():
         app.mount("/texture", StaticFiles(directory=str(texture_dir)), name="texture")
 
-    # This remains unchanged at the absolute bottom
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
-
-
 
 def start():
     import uvicorn
     uvicorn.run("app.main:app", host=settings.host, port=settings.port, log_level=settings.log_level)
-
