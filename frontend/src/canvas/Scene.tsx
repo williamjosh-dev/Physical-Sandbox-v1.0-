@@ -58,7 +58,7 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
     const textureLoader = new THREE.TextureLoader();
     const earthTexture = textureLoader.load('/texture/2k_earth_daymap.jpg');
     const earthElevationTexture = textureLoader.load('/texture/earth_elevation.jpg');
-
+    const cloudTexture = textureLoader.load('/texture/cloud-types.jpg');
     const earthGeometry = new THREE.SphereGeometry(6371000, 64, 64);
     const earthMaterial = new THREE.MeshStandardMaterial({
       map: earthTexture,
@@ -69,10 +69,19 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
     });
     const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
     scene.add(earthMesh);
-
+       // Cloud layer: Slightly larger than Earth
+       const cloudGeometry = new THREE.SphereGeometry(6386000, 64, 64);
+       const cloudMaterial = new THREE.MeshStandardMaterial({
+         alphaMap: cloudTexture,
+         transparent: true,
+         opacity: 0.8,
+         depthWrite: false, // Prevents cloud transparency from messing with depth sorting
+       });
+       const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
+       scene.add(cloudMesh);
     let frameId = 0;
     const animate = () => {
-      earthMesh.rotation.y += 0.0002;
+      cloudMesh.rotation.y += 0.00025; // Clouds move at a different speed for realism
       controls.update();
       renderer.render(scene, camera);
       frameId = requestAnimationFrame(animate);
