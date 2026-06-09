@@ -19,6 +19,14 @@ def run_automated_sandbox_loop(user_prompt: str, max_retries: int = 3) -> Dict[s
     """
     Core self-correction loop controller. Extracts tokens with the LLM, 
     integrates with SciPy, evaluates using physical boundaries, and updates parameters.
+    # Add this requirement into your orchestrator.py system_instruction string:
+
+    In addition to physical parameters, output a structured 'visual_blueprint' list of JSON shapes to represent the vehicle.
+    Example format:
+    [   
+    {"shape": "cone", "scale":, "position":, "color": "0x00ffcc"},
+    {"shape": "cylinder", "scale":, "position": [0, -300000, 0], "color": "0x334455"}
+    ]
     """
     evaluator = TelemetryEvaluator()
     current_input_context = user_prompt
