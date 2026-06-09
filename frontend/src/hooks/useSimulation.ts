@@ -8,12 +8,22 @@ export interface TheoryPayload {
   governing_equations: string[];
 }
 
+export interface BlueprintItem {
+  shape: 'cone' | 'cylinder' | 'box' | 'sphere';
+  scale: number[];
+  position: number[];
+  color: string;
+}
+
 export interface SimulationResponse {
   success: boolean;
   message: string;
+  model_type?: string;
+  labels?: string[];
   t: number[];
   y: number[][];
   theory?: TheoryPayload; // Matches 'result.theory' in App.tsx
+  blueprint?: BlueprintItem[];
   error?: string;
 }
 
@@ -58,6 +68,8 @@ async function fetchSimulationPayload(prompt: string): Promise<SimulationRespons
     return {
       success: data.success,
       message: data.message,
+      model_type: typeof data.model_type === 'string' ? data.model_type : undefined,
+      labels: Array.isArray(data.labels) ? data.labels.map(String) : undefined,
       t: Array.isArray(data.t) ? data.t.map(Number).filter((value) => !Number.isNaN(value)) : [],
       y: Array.isArray(data.y)
         ? data.y.map((row) => (Array.isArray(row) ? row.map(Number).filter((value) => !Number.isNaN(value)) : []))
@@ -67,6 +79,14 @@ async function fetchSimulationPayload(prompt: string): Promise<SimulationRespons
         core_concept: String(data.theory.core_concept || ''),
         governing_equations: Array.isArray(data.theory.governing_equations) ? data.theory.governing_equations.map(String) : []
       } : undefined,
+      blueprint: Array.isArray(data.blueprint)
+        ? data.blueprint.map((item) => ({
+            shape: String(item.shape) as 'cone' | 'cylinder' | 'box' | 'sphere',
+            scale: Array.isArray(item.scale) ? item.scale.map(Number).filter((value) => !Number.isNaN(value)) : [],
+            position: Array.isArray(item.position) ? item.position.map(Number).filter((value) => !Number.isNaN(value)) : [],
+            color: String(item.color || '0xffffff'),
+          }))
+        : undefined,
       error: data.error,
     };
   } catch (error) {

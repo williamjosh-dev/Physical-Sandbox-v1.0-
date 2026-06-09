@@ -17,6 +17,13 @@ class TheoryPayload(BaseModel):
     real_world_application: str = Field(..., description="Scenario behavior in engineering/aerospace")
 
 
+class BlueprintItem(BaseModel):
+    shape: str = Field(..., description="Shape type for the visual module part")
+    scale: List[float] = Field(..., description="X/Y/Z scale or radius values for the shape")
+    position: List[float] = Field(..., description="X/Y/Z position offset for the shape")
+    color: str = Field(..., description="Hex color string for the shape")
+
+
 class SimulationResponse(BaseModel):
     """
     Enforces structure on computed 4D data sent out to the Three.js viewport canvas.
@@ -30,6 +37,7 @@ class SimulationResponse(BaseModel):
     t: List[float] = Field(..., description="The 4th dimension: full array timeline steps")
     y: List[List[float]] = Field(..., description="The multi-dimensional coordinate trajectory states per step")
     parameters: Dict[str, float] = Field(..., description="The engineering configuration constants generated")
+    blueprint: Optional[List[BlueprintItem]] = Field(None, description="Optional generated visual module blueprint")
     prompt: str = Field(..., description="Echoes back the starting user parameter string")
 
 
@@ -44,4 +52,5 @@ class ConfigResponse(BaseModel):
     time_span: Tuple[float, float]
     time_steps: List[float]
     parameters: Dict[str, float]
+    blueprint: Optional[List[BlueprintItem]] = Field(None, description="Optional generated visual module blueprint")
     control_inputs: Dict[str, List[float]]

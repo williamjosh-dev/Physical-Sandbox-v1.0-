@@ -81,7 +81,13 @@ def run_automated_sandbox_loop(user_prompt: str, max_retries: int = 3) -> Dict[s
             continue
 
         # 5. Evaluate execution matrix arrays against your safety sanity metrics
-        eval_metrics = evaluator.evaluate(config.model_type, solution.t, solution.y, scipy_inputs["parameters"])
+        eval_metrics = evaluator.evaluate(
+            config.model_type,
+            solution.t,
+            solution.y,
+            scipy_inputs["parameters"],
+            config.visual_blueprint,
+        )
         
         if eval_metrics["passed"]:
             # Success: return telemetry coordinates to the frontend client mesh space
@@ -93,7 +99,9 @@ def run_automated_sandbox_loop(user_prompt: str, max_retries: int = 3) -> Dict[s
                 "telemetry": {
                     "timeline": solution.t.tolist(),
                     "state_matrices": solution.y.tolist(),
-                    "labels": config.state_labels
+                    "labels": config.state_labels,
+                    "visual_blueprint": config.visual_blueprint,
+                    "parameters": config.parameters,
                 }
             }
             
@@ -110,5 +118,7 @@ def run_automated_sandbox_loop(user_prompt: str, max_retries: int = 3) -> Dict[s
         "model_type": config.model_type,
         "iterations": max_retries,
         "logs": f"Self-correction sequence timed out. Terminal error: {current_input_context}",
-        "telemetry": None
+        "telemetry": None,
+        "visual_blueprint": config.visual_blueprint,
+        "parameters": config.parameters,
     }

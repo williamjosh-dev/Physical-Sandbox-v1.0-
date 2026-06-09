@@ -3,14 +3,22 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Spacecraft from './spacecraft';
 
+interface BlueprintItem {
+  shape: 'cone' | 'cylinder' | 'box' | 'sphere';
+  scale: number[];
+  position: number[];
+  color: string;
+}
+
 interface SceneProps {
   trajectory: number[][];
   currentFrame: number;
   isPlaying: boolean;
+  blueprint?: BlueprintItem[];
   onFrameAdvance?: (nextFrame: number) => void;
 }
 
-export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdvance }: SceneProps) {
+export default function Scene({ trajectory, currentFrame, isPlaying, blueprint, onFrameAdvance }: SceneProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const trajectoryRef = useRef(trajectory);
@@ -135,7 +143,12 @@ export default function Scene({ trajectory, currentFrame, isPlaying, onFrameAdva
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
       {/* 🌟 Now threeScene is perfectly readable down here! */}
-      <Spacecraft scene={threeScene} trajectory={trajectory} currentFrame={currentFrame} />
+      <Spacecraft
+        scene={threeScene}
+        trajectory={trajectory}
+        currentFrame={currentFrame}
+        blueprint={blueprint}
+      />
     </div>
   );
 }

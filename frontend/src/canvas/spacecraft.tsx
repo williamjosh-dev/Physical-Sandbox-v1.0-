@@ -3,8 +3,8 @@ import * as THREE from 'three';
 
 interface BlueprintItem {
   shape: 'cone' | 'cylinder' | 'box' | 'sphere';
-  scale: [number, number, number];
-  position: [number, number, number];
+  scale: number[];
+  position: number[];
   color: string;
 }
 
@@ -77,7 +77,8 @@ export default function Spacecraft({ scene, trajectory, currentFrame, blueprint 
       });
 
       const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(...part.position);
+      const [px, py, pz] = part.position;
+      mesh.position.set(px ?? 0, py ?? 0, pz ?? 0);
       
       // Append the modular part inside our tracking engine workspace group
       groupRef.current?.add(mesh);

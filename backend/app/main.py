@@ -64,6 +64,7 @@ def build_simulation_config(request: ConfigRequest) -> ConfigResponse:
             time_span=config.time_span,
             time_steps=config.time_steps.tolist(),
             parameters=config.parameters,
+            blueprint=config.visual_blueprint,
             control_inputs={name: values.tolist() for name, values in config.control_inputs.items()},
         )
     except ValueError as e:
@@ -92,15 +93,20 @@ def simulate_prompt(request: PromptRequest) -> SimulationResponse:
                 labels=[],
                 t=[],
                 y=[],
-                parameters={},
+                parameters=result.get("parameters", {}),
+                blueprint=result.get("visual_blueprint"),
                 prompt=request.prompt
             )
             
         telemetry = result["telemetry"]
         state_matrices = np.array(telemetry["state_matrices"])
         
-        # 3. Transpose matrix states to (num_time_steps, num_states) for your 3D earth path mesh
-        formatted_y = state_matrices.T.tolist() if state_matrices.ndim == 2 else state_matrices.tolist()
+        # 3. Normalize state vectors into a 3D render frame for the frontend canvas
+        raw_frames = state_matrices.T.tolist() if state_matrices.ndim == 2 else state_matrices.tolist()
+        formatted_y = [
+            (frame[:3] + [0.0] * max(0, 3 - len(frame))) if len(frame) < 3 else frame[:3]
+            for frame in raw_frames
+        ]
 
         return SimulationResponse(
             success=result["success"],
@@ -110,7 +116,8 @@ def simulate_prompt(request: PromptRequest) -> SimulationResponse:
             labels=telemetry["labels"],
             t=telemetry["timeline"],
             y=formatted_y,
-            parameters={}, # Can add parameter mapping tracker updates if desired
+            parameters=telemetry.get("parameters", {}),
+            blueprint=telemetry.get("visual_blueprint"),
             prompt=request.prompt,
         )
     except ValueError as e:

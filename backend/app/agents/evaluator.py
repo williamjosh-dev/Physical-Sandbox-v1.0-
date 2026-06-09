@@ -1,6 +1,6 @@
 # backend/app/agents/evaluator.py
 import numpy as np
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
 from app.physics.aerospace import run_physics_sanity_checks
 
 class TelemetryEvaluator:
@@ -11,7 +11,37 @@ class TelemetryEvaluator:
     def __init__(self):
         pass
 
-    def evaluate(self, model_type: str, t_array: np.ndarray, y_array: np.ndarray, parameters: Dict[str, float]) -> Dict[str, Any]:
+    def evaluate(
+        self,
+        model_type: str,
+        t_array: np.ndarray,
+        y_array: np.ndarray,
+        parameters: Dict[str, float],
+        blueprint: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        if not blueprint or len(blueprint) == 0:
+            return {
+                "passed": False,
+                "feedback": "MODULE_VALIDATION_FAILED: No valid visual blueprint generated for this simulation."
+            }
+
+        for index, part in enumerate(blueprint):
+            shape = str(part.get("shape", "")).lower()
+            scale = part.get("scale", [])
+            if shape not in {"cone", "cylinder", "box", "sphere"}:
+                return {
+                    "passed": False,
+                    "feedback": f"MODULE_VALIDATION_FAILED: Part {index} has invalid shape '{shape}'. Use cone, cylinder, box, or sphere."
+                }
+            if not isinstance(scale, (list, tuple)) or len(scale) < 2 or any(
+                (not isinstance(value, (int, float))) or float(value) <= 0
+                for value in scale[:2]
+            ):
+                return {
+                    "passed": False,
+                    "feedback": f"MODULE_VALIDATION_FAILED: Part {index} has invalid scale values. Ensure positive numerical dimensions."
+                }
+
         if y_array is None or y_array.size == 0:
             return {
                 "passed": False,

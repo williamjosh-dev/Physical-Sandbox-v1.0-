@@ -37,12 +37,38 @@ export default function Sidebar({ onTriggerSimulation, statusText }: SidebarProp
       <h3 style={{ margin: '0 0 15px 0', borderBottom: '1px solid #00ffcc', paddingBottom: '5px' }}>
         🧠 AI SIMULATION PROMPT
       </h3>
-      
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '14px' }}>
+        {[
+          { label: 'MODULAR WORKSPACE', prompt: 'Simulate a modular assembly workspace with structural beams, arm actuators, and hovering drone modules.' },
+          { label: 'ROCKET', prompt: 'Simulate rocket launch with 50000kg mass and 760000N thrust to reach 100km altitude.' },
+          { label: 'ORBITAL', prompt: 'Simulate orbital insertion for a satellite with initial velocity 7800 m/s at 7000 km radius.' },
+          { label: 'FIXED WING', prompt: 'Simulate a fixed-wing glider at 1000m altitude with 70m/s speed and gentle pitch control.' },
+        ].map((preset) => (
+          <button
+            key={preset.label}
+            type="button"
+            onClick={() => setInputValue(preset.prompt)}
+            style={{
+              flex: '1 1 45%',
+              backgroundColor: '#021829',
+              border: '1px solid #0ea5e9',
+              color: '#94a3b8',
+              padding: '8px 10px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontFamily: 'monospace',
+              fontSize: '0.75rem',
+            }}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
       <form onSubmit={handleSubmit}>
         <textarea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="e.g., Simulate rocket flight with 50000kg mass and 760000N thrust..."
+          placeholder="e.g., Modular workspace with beam assembly, actuator arms, and hovering drone modules..."
           style={{
             width: '100%',
             height: '100px',
