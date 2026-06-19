@@ -29,7 +29,7 @@ A high-performance, web-based physics simulation sandbox built with modern web t
 
 1. **Clone the repository**:
    ```bash
-   git clone <your-repository-url>
+   git clone <(https://github.com/williamjosh-dev/Physical-Sandbox-v1.0-)>
    cd "physical sandbox v1.0"
    ```
 
