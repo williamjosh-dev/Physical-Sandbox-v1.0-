@@ -1,0 +1,271 @@
+:root {
+  --bg-main: #070708;
+  --bg-card: #0c0c0e;
+  --border-muted: #1a1a1f;
+  --border-active: #3a3a45;
+  --text-pure: #ffffff;
+  --text-muted: #707075;
+  --text-dim: #45454a;
+  --accent-glow: #3b82f6;
+  --accent-success: #10b981;
+}
+
+/* Force browser environment to allow scrolling */
+html, body {
+  min-height: 100%;
+  overflow-y: auto;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-main);
+  color: var(--text-pure);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base Structural Layout Shell - Set to grow naturally */
+.terminal-shell {
+  min-height: 100vh;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-main);
+}
+
+.nav-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2.5rem;
+  border-bottom: 1px solid var(--border-muted);
+  background-color: rgba(7, 7, 8, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.nav-brand {
+  font-weight: bold;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-glow);
+  border-radius: 50%;
+}
+
+.nav-btn {
+  background: var(--text-pure);
+  color: var(--bg-main);
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Master Centered Interface Container */
+.main-viewport {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.hero-section {
+  margin-bottom: 3.5rem;
+}
+
+.hero-headline {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  margin: 0 0 1.25rem 0;
+}
+
+.hero-lead {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Input Workspace Block */
+.input-console-box {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 3rem;
+}
+
+.input-console-box.focused {
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 1px var(--border-active);
+}
+
+.console-form {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.console-prefix {
+  color: var(--text-muted);
+  font-weight: bold;
+  user-select: none;
+}
+
+.console-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-pure);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.console-input::placeholder {
+  color: var(--text-dim);
+}
+
+.console-submit-btn {
+  background: transparent;
+  border: 1px solid var(--border-active);
+  color: var(--text-pure);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.console-submit-btn:hover {
+  background-color: var(--text-pure);
+  color: var(--bg-main);
+}
+
+/* Logging Stream Layout Panel */
+.terminal-feed-wrapper {
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  overflow: hidden;
+  margin-bottom: 3rem;
+}
+
+.feed-header {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pulse-indicator {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-success);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent-success);
+}
+
+.feed-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.log-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.log-line-cmd {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.log-time {
+  color: var(--text-dim);
+  user-select: none;
+}
+
+.log-symbol {
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.log-cmd-text {
+  color: var(--text-pure);
+}
+
+.log-line-res {
+  display: flex;
+  gap: 0.5rem;
+  padding-left: 4.5rem;
+}
+
+.log-reply-arrow {
+  color: var(--text-dim);
+  user-select: none;
+}
+
+.log-res-text {
+  color: var(--text-muted);
+}
+
+/* Runtime Component Injection Frame Layer */
+.sandbox-canvas-viewport {
+  width: 100%;
+  height: 480px;
+  background-color: #09090b;
+  border: 1px dashed var(--border-muted);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.sandbox-placeholder-text {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+/* Logging Response Dynamic State Modifiers */
+.status-running .log-res-text {
+  color: var(--accent-glow);
+  animation: logPulse 1.2s infinite ease-in-out;
+}
+
+.status-success .log-res-text {
+  color: var(--accent-success);
+}
+
+@keyframes logPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
