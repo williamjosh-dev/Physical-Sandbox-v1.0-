@@ -39,7 +39,8 @@ export const InputConsole: React.FC<InputConsoleProps> = ({ onSubmit, isLoading 
       <div className="panel-card">
         <div className="panel-card__body">
           <p className="panel-card__desc">
-            Describe a 3D simulation or shader effect. The LLM compiles GLSL and injects it into the runtime.
+            Describe any physical structure — from a simple box to rockets, bridges, or assemblies.
+            The sandbox builds a 3D model and runs a physics preview so you can test before building in real life.
           </p>
           <div className="input-console__field">
             <span className="input-console__prefix">&gt;</span>
@@ -50,7 +51,7 @@ export const InputConsole: React.FC<InputConsoleProps> = ({ onSubmit, isLoading 
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={handleKeyDown}
               onInput={handleInput}
-              placeholder="e.g. generate a revolving orbit vortex with green particles..."
+              placeholder="e.g. build a red box, rocket launch, bridge with pillars..."
               disabled={isLoading}
               rows={2}
             />
@@ -74,7 +75,7 @@ export const InputConsole: React.FC<InputConsoleProps> = ({ onSubmit, isLoading 
               onClick={handleSubmit}
               disabled={isLoading || !value.trim()}
             >
-              {isLoading ? 'Compiling…' : 'Compile'}
+              {isLoading ? 'Building…' : 'Build & Test'}
             </button>
           </div>
         </div>

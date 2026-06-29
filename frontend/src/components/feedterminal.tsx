@@ -22,6 +22,7 @@ export const FeedTerminal: React.FC<FeedTerminalProps> = ({ logs }) => {
     if (el) el.scrollTop = el.scrollHeight;
   }, [logs]);
 
+// Let the run coding sessioin always open for all buddys that he can js suppoesd to do it damn man 
   return (
     <div className="feed-terminal">
       <div className="feed-terminal__header">

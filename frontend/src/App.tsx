@@ -1,77 +1,47 @@
 import React, { useState, useCallback } from 'react';
 import { AppHeader } from './components/ui/appheader';
 import { Sidebar } from './components/ui/sidebar';
-import { SandboxCanvas } from './components/sandboxcanvas';
-import { LogEntry } from './types';
-
-const BOOT_LOGS: LogEntry[] = [
-  { id: 'boot-1', text: 'engine --boot', level: 'system', timestamp: new Date() },
-  { id: 'boot-2', text: '4D Sandbox Core online. WebGL runtime environment mapping ready.', level: 'success', timestamp: new Date() },
-];
-
-let logCounter = 0;
-function createLog(text: string, level: LogEntry['level'] = 'info'): LogEntry {
-  return { id: `log-${++logCounter}`, text, level, timestamp: new Date() };
-}
+import { BlueprintScene } from './components/canvas/blueprintscene';
+import { useSandbox } from './hooks/usellm';
 
 export default function App() {
-  const [shaderFormula, setShaderFormula] = useState('');
-  const [logs, setLogs] = useState<LogEntry[]>(BOOT_LOGS);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const appendLog = useCallback((text: string, level: LogEntry['level'] = 'info') => {
-    setLogs((prev) => [...prev, createLog(text, level)]);
-  }, []);
-
-  const handleCompile = useCallback(async (promptText: string) => {
-    setIsLoading(true);
-    appendLog(`processing prompt: "${promptText}"`, 'system');
-    appendLog('compiling GPGPU fragment math units...', 'info');
-
-    // Placeholder until LLM API is wired — simulates async compile
-    await new Promise((r) => setTimeout(r, 600));
-
-    const customMath = `pos.y = sin(pos.x * 5.0 + uTime) * cos(pos.z * 5.0) * 0.7;`;
-    setShaderFormula(customMath);
-    appendLog('shader compiled successfully — 16,384 nodes active', 'success');
-    setIsLoading(false);
-  }, [appendLog]);
+  const { scene, logs, isLoading, compile, reset } = useSandbox();
 
   const handleReset = useCallback(() => {
-    setShaderFormula('');
-    setLogs(BOOT_LOGS.map((l) => ({ ...l, timestamp: new Date() })));
-    appendLog('runtime reset complete', 'warn');
-  }, [appendLog]);
+    reset();
+  }, [reset]);
 
   return (
     <div className="app-shell">
       <AppHeader onReset={handleReset} />
 
       <main className="workspace">
-        <Sidebar logs={logs} onSubmit={handleCompile} isLoading={isLoading} />
+        <Sidebar logs={logs} onSubmit={compile} isLoading={isLoading} />
 
         <section className="viewport-panel">
           <div className="viewport-panel__toolbar">
-            <span className="viewport-panel__label">4D Viewport · Active Render Target</span>
+            <span className="viewport-panel__label">Physics Sandbox · 3D Build & Test</span>
             <div className="viewport-panel__stats">
               <span className="stat-badge">
-                nodes <span className="stat-badge__value">16,384</span>
+                parts <span className="stat-badge__value">{scene.blueprint.length || '—'}</span>
               </span>
               <span className="stat-badge">
-                grid <span className="stat-badge__value">128²</span>
+                model <span className="stat-badge__value">{scene.modelType.toUpperCase()}</span>
               </span>
               <span className="stat-badge">
-                status <span className="stat-badge__value">{isLoading ? 'COMPILING' : 'LIVE'}</span>
+                status <span className="stat-badge__value">{isLoading ? 'BUILDING' : 'LIVE'}</span>
               </span>
             </div>
           </div>
 
           <div className="viewport-panel__canvas">
-            <SandboxCanvas customShaderFormula={shaderFormula} />
-            <div className="sandbox-canvas__overlay">
-              <span className="overlay-chip">WebGL · GPGPU</span>
-              {shaderFormula && <span className="overlay-chip">Custom Shader</span>}
-            </div>
+            <BlueprintScene
+              models={scene.blueprint}
+              trajectory={scene.trajectory}
+              timeline={scene.timeline}
+              modelType={scene.modelType}
+              physicsPassed={scene.physicsPassed}
+            />
           </div>
         </section>
       </main>

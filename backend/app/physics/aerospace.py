@@ -243,20 +243,48 @@ def _build_visual_blueprint(prompt: str, model_type: str) -> List[Dict[str, Any]
     else:
         if "drone" in normalized or "quad" in normalized or "rotor" in normalized:
             blueprint = [
-                {"shape": "box", "scale": [90000.0, 25000.0, 35000.0], "position": [0.0, 0.0, 0.0], "color": "0x34d399"},
-                {"shape": "cylinder", "scale": [12000.0, 70000.0, 16.0], "position": [60000.0, 0.0, 0.0], "color": "0xf59e0b"},
-                {"shape": "cylinder", "scale": [12000.0, 70000.0, 16.0], "position": [-60000.0, 0.0, 0.0], "color": "0xf59e0b"},
+                {"shape": "box", "scale": [0.6, 0.08, 0.6], "position": [0.0, 0.8, 0.0], "color": "0x34d399"},
+                {"shape": "cylinder", "scale": [0.12, 0.02, 0.12], "position": [0.35, 0.85, 0.35], "color": "0xf59e0b"},
+                {"shape": "cylinder", "scale": [0.12, 0.02, 0.12], "position": [-0.35, 0.85, 0.35], "color": "0xf59e0b"},
+                {"shape": "cylinder", "scale": [0.12, 0.02, 0.12], "position": [0.35, 0.85, -0.35], "color": "0xf59e0b"},
+                {"shape": "cylinder", "scale": [0.12, 0.02, 0.12], "position": [-0.35, 0.85, -0.35], "color": "0xf59e0b"},
+            ]
+        elif re.search(r"\b(box|cube|block|crate)\b", normalized) and not re.search(r"\b(bridge|tower|rocket)\b", normalized):
+            blueprint = [{"shape": "box", "scale": [1.0, 1.0, 1.0], "position": [0.0, 0.5, 0.0], "color": "0x3b82f6"}]
+        elif re.search(r"\b(sphere|ball|orb)\b", normalized):
+            blueprint = [{"shape": "sphere", "scale": [0.75, 0.75, 0.75], "position": [0.0, 0.75, 0.0], "color": "0xef4444"}]
+        elif re.search(r"\b(cylinder|pillar|column|pipe)\b", normalized):
+            blueprint = [{"shape": "cylinder", "scale": [0.5, 1.5, 0.5], "position": [0.0, 0.75, 0.0], "color": "0x22c55e"}]
+        elif re.search(r"\b(torus|ring|donut)\b", normalized):
+            blueprint = [{"shape": "torus", "scale": [0.8, 0.8, 0.8], "position": [0.0, 0.8, 0.0], "color": "0xa855f7"}]
+        elif re.search(r"\b(tower|stack)\b", normalized):
+            blueprint = [
+                {"shape": "box", "scale": [0.8, 0.3, 0.8], "position": [0.0, 0.15, 0.0], "color": "0x64748b"},
+                {"shape": "box", "scale": [0.65, 0.3, 0.65], "position": [0.0, 0.45, 0.0], "color": "0x64748b"},
+                {"shape": "cone", "scale": [0.4, 0.35, 0.4], "position": [0.0, 0.88, 0.0], "color": "0xf97316"},
+            ]
+        elif re.search(r"\b(bridge|beam|truss)\b", normalized):
+            blueprint = [
+                {"shape": "box", "scale": [3.0, 0.12, 0.4], "position": [0.0, 0.8, 0.0], "color": "0x3b82f6"},
+                {"shape": "cylinder", "scale": [0.08, 0.8, 0.08], "position": [-1.2, 0.4, 0.0], "color": "0x64748b"},
+                {"shape": "cylinder", "scale": [0.08, 0.8, 0.08], "position": [1.2, 0.4, 0.0], "color": "0x64748b"},
+            ]
+        elif re.search(r"\b(pendulum|swing)\b", normalized):
+            blueprint = [
+                {"shape": "box", "scale": [0.6, 0.08, 0.08], "position": [0.0, 2.0, 0.0], "color": "0x64748b"},
+                {"shape": "cylinder", "scale": [0.02, 1.2, 0.02], "position": [0.0, 1.4, 0.0], "color": "0x94a3b8"},
+                {"shape": "sphere", "scale": [0.2, 0.2, 0.2], "position": [0.0, 0.6, 0.0], "color": "0x60a5fa"},
             ]
         elif "crane" in normalized or "assembly" in normalized or "workspace" in normalized or "module" in normalized or "structure" in normalized:
             blueprint = [
-                {"shape": "box", "scale": [160000.0, 40000.0, 80000.0], "position": [0.0, -20000.0, 0.0], "color": "0x64748b"},
-                {"shape": "cylinder", "scale": [15000.0, 140000.0, 16.0], "position": [85000.0, 60000.0, 0.0], "color": "0xf97316"},
-                {"shape": "cone", "scale": [30000.0, 70000.0, 16.0], "position": [-90000.0, 50000.0, 0.0], "color": "0x22d3ee"},
+                {"shape": "box", "scale": [1.2, 0.2, 0.6], "position": [0.0, 0.1, 0.0], "color": "0x64748b"},
+                {"shape": "cylinder", "scale": [0.06, 1.2, 0.06], "position": [0.6, 0.7, 0.0], "color": "0xf97316"},
+                {"shape": "cone", "scale": [0.2, 0.3, 0.2], "position": [-0.5, 0.35, 0.0], "color": "0x22d3ee"},
             ]
         else:
             blueprint = [
-                {"shape": "sphere", "scale": [90000.0, 90000.0, 90000.0], "position": [0.0, 0.0, 0.0], "color": "0x60a5fa"},
-                {"shape": "box", "scale": [40000.0, 25000.0, 45000.0], "position": [0.0, -45000.0, 0.0], "color": "0x334155"},
+                {"shape": "sphere", "scale": [0.35, 0.35, 0.35], "position": [0.0, 0.75, 0.0], "color": "0x60a5fa"},
+                {"shape": "box", "scale": [0.8, 0.4, 0.8], "position": [0.0, 0.2, 0.0], "color": "0x334155"},
             ]
 
     return blueprint
