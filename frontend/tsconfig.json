@@ -12,5 +12,10 @@
     "isolatedModules": true,
     "noEmit": false
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "src/components/canvas/sencecanvas.tsx",
+    "src/components/canvas/modelviewer.tsx",
+    "src/components/canvas/lightcontrol.tsx"
+  ]
 }

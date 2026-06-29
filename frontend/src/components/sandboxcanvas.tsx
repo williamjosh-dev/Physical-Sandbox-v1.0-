@@ -1,72 +1,126 @@
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { GPUComputationRenderer, Variable } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
+import { GPGPUSimulator, generateCustomShader, DEFAULT_POSITION_SHADER } from './GPGPUfragments';
 
-// Simple GLSL Fragment Shader to compute particle positions over time
-const positionFragmentShader = `
-  uniform float uTime;
-  uniform float uSpeed;
-
-  void main() {
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
-    vec4 tmpPos = texture2D(texturePosition, uv);
-    vec3 pos = tmpPos.xyz;
-
-    // Example LLM controllable logic: Simple wave deformation
-    pos.y = sin(pos.x * 2.0 + uTime * uSpeed) * 0.5;
-
-    gl_FragColor = vec4(pos, 1.0);
-  }
-`;
-
-export class GPGPUSimulator {
-  private gpuCompute: GPUComputationRenderer;
-  private positionVariable: Variable;
-  private size: number;
-
-  constructor(renderer: THREE.WebGLRenderer, size: number = 128) {
-    this.size = size;
-    this.gpuCompute = new GPUComputationRenderer(size, size, renderer);
-
-    // Create initial data texture
-    const dtPosition = this.gpuCompute.createTexture();
-    this.fillPositionTexture(dtPosition);
-
-    // Add variable to the compute renderer
-    this.positionVariable = this.gpuCompute.addVariable('texturePosition', positionFragmentShader, dtPosition);
-    
-    // Set variable dependencies (it reads from its own previous frame)
-    this.gpuCompute.setVariableDependencies(this.positionVariable, [this.positionVariable]);
-
-    // Add custom uniforms that your LLM can manipulate later
-    this.positionVariable.material.uniforms['uTime'] = { value: 0 };
-    this.positionVariable.material.uniforms['uSpeed'] = { value: 1.0 };
-
-    // Check for initialization errors
-    const error = this.gpuCompute.init();
-    if (error !== null) {
-      console.error('GPGPU Initialization Error:', error);
-    }
-  }
-
-  private fillPositionTexture(texture: THREE.DataTexture) {
-    const arr = texture.image.data;
-    for (let i = 0; i < arr.length; i += 4) {
-      // Map pixels to a 3D grid layout
-      arr[i + 0] = (Math.random() - 0.5) * 10; // X
-      arr[i + 1] = 0;                          // Y
-      arr[i + 2] = (Math.random() - 0.5) * 10; // Z
-      arr[i + 3] = 1;                          // W
-    }
-  }
-
-  public update(time: number, speed: number): THREE.Texture {
-    this.positionVariable.material.uniforms['uTime'].value = time;
-    this.positionVariable.material.uniforms['uSpeed'].value = speed;
-    
-    // Run the computation step on the GPU
-    this.gpuCompute.compute();
-
-    // Return the resulting texture containing computed 3D positions
-    return this.gpuCompute.getCurrentRenderTarget(this.positionVariable).texture;
-  }
+interface SandboxCanvasProps {
+  customShaderFormula?: string;
 }
+
+export const SandboxCanvas: React.FC<SandboxCanvasProps> = ({ customShaderFormula }) => {
+  const mountRef = useRef<HTMLDivElement>(null);
+  const simulatorRef = useRef<GPGPUSimulator | null>(null);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+
+  useEffect(() => {
+    if (!mountRef.current) return;
+
+    const width = mountRef.current.clientWidth || 600;
+    const height = mountRef.current.clientHeight || 450;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#000000');
+
+    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+    camera.position.set(0, 6, 8);
+    camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    mountRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    const SIM_SIZE = 128;
+    const initialShader = customShaderFormula
+      ? generateCustomShader(customShaderFormula)
+      : DEFAULT_POSITION_SHADER;
+
+    const simulator = new GPGPUSimulator(renderer, SIM_SIZE, initialShader);
+    simulatorRef.current = simulator;
+
+    const renderMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uPositionTexture: { value: null },
+      },
+      vertexShader: `
+        uniform sampler2D uPositionTexture;
+        void main() {
+          vec4 gpgpuPos = texture2D(uPositionTexture, uv);
+          vec4 mvPosition = modelViewMatrix * vec4(gpgpuPos.xyz, 1.0);
+          gl_Position = projectionMatrix * mvPosition;
+          gl_PointSize = 3.0;
+        }
+      `,
+      fragmentShader: `
+        void main() {
+          gl_FragColor = vec4(0.0, 0.9, 0.4, 1.0);
+        }
+      `,
+      transparent: true,
+    });
+    materialRef.current = renderMaterial;
+
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(SIM_SIZE * SIM_SIZE * 3);
+    const uvs = new Float32Array(SIM_SIZE * SIM_SIZE * 2);
+
+    let pIdx = 0;
+    let uIdx = 0;
+    for (let i = 0; i < SIM_SIZE; i++) {
+      for (let j = 0; j < SIM_SIZE; j++) {
+        positions[pIdx++] = 0;
+        positions[pIdx++] = 0;
+        positions[pIdx++] = 0;
+        uvs[uIdx++] = i / SIM_SIZE;
+        uvs[uIdx++] = j / SIM_SIZE;
+      }
+    }
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+
+    const particleCloud = new THREE.Points(geometry, renderMaterial);
+    scene.add(particleCloud);
+
+    const clock = new THREE.Clock();
+    let animationFrameId: number;
+
+    const tick = () => {
+      const elapsed = clock.getElapsedTime();
+
+      if (simulatorRef.current && materialRef.current) {
+        const computedTextureFrame = simulatorRef.current.update(elapsed, 1.5);
+        materialRef.current.uniforms['uPositionTexture'].value = computedTextureFrame;
+      }
+
+      renderer.render(scene, camera);
+      animationFrameId = requestAnimationFrame(tick);
+    };
+    tick();
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry || !rendererRef.current || !cameraRef.current) return;
+      const { width: w, height: h } = entry.contentRect;
+      if (w === 0 || h === 0) return;
+      cameraRef.current.aspect = w / h;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(w, h);
+    });
+    resizeObserver.observe(mountRef.current);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      resizeObserver.disconnect();
+      renderer.dispose();
+      geometry.dispose();
+      renderMaterial.dispose();
+      if (mountRef.current) {
+        mountRef.current.innerHTML = '';
+      }
+    };
+  }, [customShaderFormula]);
+
+  return <div ref={mountRef} className="sandbox-canvas" />;
+};

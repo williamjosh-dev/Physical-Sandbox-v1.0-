@@ -1,7 +1,7 @@
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
-import { ModelViewer } from './ModelViewer';
+import { ModelViewer } from './modelviewer';
 import { ModelConfig } from '../../types';
 
 interface SceneCanvasProps {
@@ -11,7 +11,7 @@ interface SceneCanvasProps {
 export const SceneCanvas: React.FC<SceneCanvasProps> = ({ currentModel }) => {
   return (
     <div className="w-full h-full bg-slate-900 relative">
-      <Canvas camera={{ position:, fov: 50 }}>
+      <Canvas camera={{ position: [0, 2, 5], fov: 50 }}>
         {/* Soft global ambient light */}
         <ambientLight intensity={0.6} />
         
