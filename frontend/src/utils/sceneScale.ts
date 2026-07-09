@@ -43,7 +43,8 @@ export function normalizeBlueprintItems(items: BlueprintItem[]): ModelConfig[] {
       item.scale[2] * factor,
     ] as [number, number, number],
     color: parseHexColor(item.color),
-    wireframe: false,
+    wireframe: item.wireframe ?? false,
+    rotation: item.rotation ? [item.rotation[0], item.rotation[1], item.rotation[2]] : undefined,
   }));
 }
 

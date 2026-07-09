@@ -7,13 +7,15 @@ interface BlueprintModelProps {
 
 export const BlueprintModel: React.FC<BlueprintModelProps> = ({ config }) => {
   const [sx, sy, sz] = config.scale;
+  const rotation = (config as any).rotation || [0, 0, 0];
+  const wireframe = (config as any).wireframe || false;
 
   const geometry = () => {
     switch (config.type) {
       case 'sphere':
         return <sphereGeometry args={[Math.max(sx, sy, sz), 32, 32]} />;
       case 'cylinder':
-        return <cylinderGeometry args={[sx, sx, sy, 32]} />;
+        return <cylinderGeometry args={[sx, sy, sz, 32]} />;
       case 'torus':
         return <torusGeometry args={[sx * 0.6, sx * 0.2, 16, 48]} />;
       case 'cone':
@@ -27,13 +29,14 @@ export const BlueprintModel: React.FC<BlueprintModelProps> = ({ config }) => {
   return (
     <mesh
       position={config.position}
+      rotation={rotation}
       castShadow
       receiveShadow
     >
       {geometry()}
       <meshStandardMaterial
         color={config.color}
-        wireframe={config.wireframe}
+        wireframe={wireframe}
         roughness={0.35}
         metalness={0.15}
       />

@@ -11,23 +11,107 @@ from app.physics.aerospace import (
     map_prompt_to_scipy_tracking,
     get_dynamics_function
 )
+from app.physics.geometry_builder import ObjectBuilder, components_to_blueprint
 from app.agents.evaluator import TelemetryEvaluator
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", "YOUR_API_KEY"))
+
+def detect_object_build_request(prompt: str) -> bool:
+    """Detect if user is asking to build a 3D object instead of simulating physics"""
+    object_keywords = [
+        "build", "create", "make", "generate", "design",
+        "table", "chair", "box", "sphere", "cube", "pyramid",
+        "building", "house", "desk", "bench", "object",
+        "3d model", "3d object", "geometry", "shape",
+        "red box", "blue table", "wooden chair", "metal building"
+    ]
+    prompt_lower = prompt.lower()
+    return any(keyword in prompt_lower for keyword in object_keywords)
+
+
+def generate_object_blueprint(user_prompt: str) -> Dict[str, Any]:
+    """
+    Generate a 3D object based on user description.
+    Uses LLM to convert natural language to structured object description.
+    """
+    try:
+        # Use LLM to structure the object description
+        system_instruction = (
+            "You are a 3D geometry generator. Convert user descriptions into structured object specifications. "
+            "Generate descriptions that can be parsed by the ObjectBuilder system. "
+            "Format: object_type [color] [at position x,y,z] [width/height/depth values]. "
+            "Examples: "
+            "'red box size 1,2,1 at 0,0,0', "
+            "'wooden table width 2 depth 1 at 1,0,0', "
+            "'blue chair at 0,0,1', "
+            "'building height 5 width 2 color gray at 0,0,0'. "
+            "Always include color, object type, and position. Use lowercase."
+        )
+        
+        messages = [
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": f"Create this 3D object: {user_prompt}"}
+        ]
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.3
+        )
+        
+        object_description = response.choices[0].message.content
+        
+        # Parse and build the geometry
+        components = ObjectBuilder.parse_and_build(object_description)
+        blueprint = components_to_blueprint(components)
+        
+        return {
+            "success": True,
+            "model_type": "custom_3d_object",
+            "iterations": 1,
+            "logs": f"Generated 3D object: {object_description}",
+            "telemetry": {
+                "timeline": [0.0],
+                "state_matrices": [[0.0, 0.0, 0.0]],
+                "labels": ["x", "y", "z"],
+                "visual_blueprint": blueprint,
+                "parameters": {},
+            },
+            "visual_blueprint": blueprint,
+            "parameters": {},
+        }
+    except Exception as e:
+        # Fallback to simple box
+        components = [ObjectBuilder.build_box()]
+        blueprint = components_to_blueprint(components)
+        return {
+            "success": False,
+            "model_type": "custom_3d_object",
+            "iterations": 1,
+            "logs": f"Object generation error: {str(e)}. Generated fallback box.",
+            "telemetry": {
+                "timeline": [0.0],
+                "state_matrices": [[0.0, 0.0, 0.0]],
+                "labels": ["x", "y", "z"],
+                "visual_blueprint": blueprint,
+                "parameters": {},
+            },
+            "visual_blueprint": blueprint,
+            "parameters": {},
+        }
+
 
 def run_automated_sandbox_loop(user_prompt: str, max_retries: int = 3) -> Dict[str, Any]:
     """
     Core self-correction loop controller. Extracts tokens with the LLM, 
     integrates with SciPy, evaluates using physical boundaries, and updates parameters.
-    # Add this requirement into your orchestrator.py system_instruction string:
-
-    In addition to physical parameters, output a structured 'visual_blueprint' list of JSON shapes to represent the vehicle.
-    Example format:
-    [   
-    {"shape": "cone", "scale":, "position":, "color": "0x00ffcc"},
-    {"shape": "cylinder", "scale":, "position": [0, -300000, 0], "color": "0x334455"}
-    ]
+    Can also generate 3D objects if user requests object building instead of physics simulation.
     """
+    
+    # Check if user is asking to build a 3D object
+    if detect_object_build_request(user_prompt):
+        return generate_object_blueprint(user_prompt)
+    
     evaluator = TelemetryEvaluator()
     current_input_context = user_prompt
     attempt_history = []

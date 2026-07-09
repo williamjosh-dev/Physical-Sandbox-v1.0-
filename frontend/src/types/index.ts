@@ -11,6 +11,8 @@ export interface BlueprintItem {
   scale: [number, number, number];
   position: [number, number, number];
   color: string;
+  rotation?: [number, number, number];
+  wireframe?: boolean;
 }
 
 export interface ModelConfig {
@@ -19,7 +21,8 @@ export interface ModelConfig {
   position: [number, number, number];
   color: string;
   scale: [number, number, number];
-  wireframe: boolean;
+  wireframe?: boolean;
+  rotation?: [number, number, number];
 }
 
 export type LogLevel = 'info' | 'success' | 'warn' | 'error' | 'system';
