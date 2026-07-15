@@ -1,3 +1,4 @@
+<img width="1365" height="767" alt="Screenshot 2026-07-14 234213" src="https://github.com/user-attachments/assets/00a36a67-76da-4271-8a43-a1c065aaf3ef" />
 # Physical Sandbox v1.0
 
 A high-performance, web-based physics simulation sandbox built with modern web technologies. This project leverages GPU acceleration to handle complex physical computations directly on the graphics hardware, providing a fluid and interactive experience.
