@@ -1,51 +1,66 @@
-<img width="1365" height="767" alt="Screenshot 2026-07-14 234213" src="https://github.com/user-attachments/assets/00a36a67-76da-4271-8a43-a1c065aaf3ef" />
 # Physical Sandbox v1.0
 
-A high-performance, web-based physics simulation sandbox built with modern web technologies. This project leverages GPU acceleration to handle complex physical computations directly on the graphics hardware, providing a fluid and interactive experience.
+This project is a web tool that turns text prompts into 3D physics simulations. It uses your computer's graphics card (GPU) through WebGL to handle thousands of moving objects at a smooth 60 frames per second inside your browser.
 
-## 🚀 Features
+## Tech Stack and Structure
 
-- **GPGPU-Powered Physics**: Utilizes the `GPUComputationRenderer` to offload heavy physical simulations (such as particles, fluids, or flocking) to the GPU using fragment shaders, enabling thousands of simultaneous calculations.
-- **Hybrid 3D Rendering**: Combines Three.js WebGL rendering for high-fidelity 3D graphics with the `CSS3DRenderer` to integrate interactive HTML/DOM elements seamlessly within the 3D environment.
-- **Type-Safe Development**: Built with **TypeScript** to ensure code reliability and a robust development experience.
-- **Reactive UI**: Leverages **React** for a component-based user interface that manages simulation parameters and state effectively.
-- **Real-time Interaction**: Designed for immediate feedback, allowing users to modify simulation variables and see the results instantly in a physical "playground."
+The project has a separate frontend for the web interface and a backend for processing data.
 
-## 🛠️ Technology Stack
+* **Frontend**: Uses React, Three.js, and TypeScript to show the 3D graphics and run the physics calculations on the GPU.
+* **Backend**: Uses a Python API to read the text prompts and calculate how the shapes should first appear in the 3D space.
 
-- **Core Engine**: Three.js
-- **Frontend Framework**: React
-- **Programming Language**: TypeScript
-- **GPU Computing**: GPGPU via Custom Fragment Shaders
-- **Transpilation**: Babel
+### Project Structure
 
-## 📦 Getting Started
-
-### Prerequisites
-
-- **Node.js** (Latest LTS version recommended)
-- **npm** or **yarn**
-
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone <(https://github.com/williamjosh-dev/Physical-Sandbox-v1.0-)>
-   cd "physical sandbox v1.0"
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-### Running the Application
-
-To start the development server and launch the sandbox:
-```bash
-npm start
+```text
+Physical-Sandbox-v1.0-/
+├── backend/                         # Python backend code
+│   ├── app/                         
+│   │   ├── main.py                  # API routes and server start
+│   │   └── geometry_engine.py       # Turns text prompts into 3D shapes
+│   └── requirements.txt             # Python packages needed
+├── docs/                            # Documentation files
+│   └── geometry-builder-guide.md    # Guide for using the API
+└── frontend/                        # React web interface code
+    ├── src/
+    │   ├── components/              # UI parts like input bars and panels
+    │   │   ├── feedterminal.tsx     # Shows system logs and status
+    │   │   ├── inputconsole.tsx     # Where users type text prompts
+    │   │   └── sandboxcanvas.tsx    # Sets up the 3D viewing screen
+    │   ├── core/                    # Handles the main animation loop
+    │   ├── shaders/                 # GPU code for physics math
+    │   │   └── GPGPUfragments.ts    # Code for speed and gravity
+    │   ├── App.tsx                  # Main layout and backend connection
+    │   └── main.tsx                 # Web page entry point
+    ├── package.json                 # Frontend packages needed
+    └── vite.config.ts               # Build tools and server setup
 ```
 
-## 📄 License
+## Quick Start
 
-This project is developed as an open-source sandbox. Please refer to the license files in the `node_modules` for third-party library attributions.
+### 1. Start the Python Backend
+Go to the backend folder, install the required packages, and run the server:
+```bash
+cd backend
+pip install -r requirements.txt
+python app/main.py
+```
+
+### 2. Start the Frontend
+Open a new terminal window, go to the frontend folder, install the packages, and start the development server:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open `http://localhost:5173` in your web browser to use the app.
+
+## How it Works
+
+1. **Text Input**: You type a request (for example: "Create a heavy group of objects pulling everything into the center").
+2. **Backend Setup**: The Python backend reads your text and calculates where the shapes and speeds should start.
+3. **GPU Setup**: The frontend takes these starting points and sends them to the graphics card as image data.
+4. **Physics Loop**: On every frame, the GPU code reads the positions from the last frame, calculates the gravity and movement, and updates the shapes instantly.
+
+## Contributing
+
+If you want to make the physics faster or add new features, feel free to fork the repository, make a branch with your changes, and open a pull request!
