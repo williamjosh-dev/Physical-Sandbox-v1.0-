@@ -1,6 +1,6 @@
 # Physical Sandbox v1.0
 
-This project is a web tool that turns text prompts into 3D physics simulations. It uses your computer's graphics card (GPU) through WebGL to handle thousands of moving objects at a smooth 60 frames per second inside your browser.
+This project is a web tool that turns text prompts into 3D physics simulations. it uses your computer s graphics card (GPU) through WebGL to handle thousands of moving objects at smooth 60 frames per second inside your browser(such as microsoft edge or chrome).
 
 ## Tech Stack and Structure
 
@@ -41,7 +41,7 @@ Physical-Sandbox-v1.0-/
 Go to the backend folder, install the required packages, and run the server:
 ```bash
 cd backend
-pip install -r requirements.txt
+pip install requirements.txt
 python app/main.py
 ```
 
