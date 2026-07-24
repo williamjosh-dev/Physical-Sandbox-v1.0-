@@ -13,26 +13,26 @@ The project has a separate frontend for the web interface and a backend for proc
 
 ```text
 Physical-Sandbox-v1.0-/
-├── backend/                         # Python backend code
+├── backend/                         # python backend code
 │   ├── app/                         
 │   │   ├── main.py                  # API routes and server start
-│   │   └── geometry_engine.py       # Turns text prompts into 3D shapes
-│   └── requirements.txt             # Python packages needed
-├── docs/                            # Documentation files
-│   └── geometry-builder-guide.md    # Guide for using the API
-└── frontend/                        # React web interface code
+│   │   └── geometry_engine.py       # turns text prompts into 3D shapes
+│   └── requirements.txt             # python packages needed
+├── docs/                            # documentation files
+│   └── geometry-builder-guide.md    # guide for using the API
+└── frontend/                        # react web interface code
     ├── src/
     │   ├── components/              # UI parts like input bars and panels
-    │   │   ├── feedterminal.tsx     # Shows system logs and status
-    │   │   ├── inputconsole.tsx     # Where users type text prompts
-    │   │   └── sandboxcanvas.tsx    # Sets up the 3D viewing screen
-    │   ├── core/                    # Handles the main animation loop
+    │   │   ├── feedterminal.tsx     # shows system logs and status
+    │   │   ├── inputconsole.tsx     # where users type text prompts
+    │   │   └── sandboxcanvas.tsx    # sets up the 3D viewing screen
+    │   ├── core/                    # handles the main animation loop
     │   ├── shaders/                 # GPU code for physics math
-    │   │   └── GPGPUfragments.ts    # Code for speed and gravity
-    │   ├── App.tsx                  # Main layout and backend connection
-    │   └── main.tsx                 # Web page entry point
-    ├── package.json                 # Frontend packages needed
-    └── vite.config.ts               # Build tools and server setup
+    │   │   └── GPGPUfragments.ts    # code for speed and gravity
+    │   ├── App.tsx                  # main layout and backend connection
+    │   └── main.tsx                 # web page entry point
+    ├── package.json                 # frontend packages needed
+    └── vite.config.ts               # build tools and server setup
 ```
 
 ## Quick Start
